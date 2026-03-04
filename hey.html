@@ -1,203 +1,153 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Research: Automated Curriculum Credit Matching - Rishi Mailoorkar</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script>
-        mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });
-    </script>
-    <style>
+from fasthtml.common import *
+
+# 1. Setup Head & Metadata
+hdrs = (
+    # Tailwind CSS
+    Script(src="https://cdn.tailwindcss.com"),
+    # Mermaid.js for Interactive Diagrams
+    Script(src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"),
+    # MathJax for LaTeX
+    Script(src="https://polyfill.io/v3/polyfill.min.js?features=es6"),
+    Script(id="MathJax-script", async_=True, src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"),
+    # Initialize Mermaid
+    Script("mermaid.initialize({ startOnLoad: true, theme: 'neutral', securityLevel: 'loose' });"),
+    # Google Font
+    Link(rel="stylesheet", href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"),
+    Style("""
         body { font-family: 'Inter', sans-serif; line-height: 1.7; color: #334155; }
-        header { border-bottom: 4px solid #1e40af; }
-        section { margin-bottom: 3rem; }
-        h2 { color: #1e40af; border-left: 5px solid #1e40af; padding-left: 1rem; margin-bottom: 1.25rem; font-weight: 800; font-size: 1.75rem; text-transform: uppercase; letter-spacing: 0.025em; }
-        h3 { color: #1e3a8a; font-weight: 700; font-size: 1.25rem; margin-top: 1.5rem; margin-bottom: 0.75rem; }
         .abstract { font-style: italic; background: #f8fafc; border: 1px solid #e2e8f0; padding: 2rem; border-radius: 0.75rem; margin-top: 1rem; }
         .diagram-container { background: white; border: 1px solid #e2e8f0; padding: 2rem; border-radius: 0.75rem; margin: 2rem 0; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
         .equation-box { background: #f1f5f9; padding: 1.5rem; border-radius: 0.5rem; margin: 1rem 0; text-align: center; }
-        .metric-card { background: white; border: 1px solid #cbd5e1; padding: 1rem; border-radius: 0.5rem; text-align: center; }
-    </style>
-</head>
-<body class="bg-slate-100 py-10 px-4">
+        h2 { color: #1e40af; border-left: 5px solid #1e40af; padding-left: 1rem; margin-bottom: 1.25rem; font-weight: 800; font-size: 1.75rem; text-transform: uppercase; letter-spacing: 0.025em; margin-top: 3rem; }
+        h3 { color: #1e3a8a; font-weight: 700; font-size: 1.25rem; margin-top: 1.5rem; margin-bottom: 0.75rem; }
+    """)
+)
 
-    <div class="max-w-5xl mx-auto bg-white p-8 md:p-16 shadow-2xl rounded-xl">
-        <header class="pb-8 mb-10">
-            <h1 class="text-4xl md:text-5xl font-black text-slate-900 leading-tight mb-4">
-                Automated Curriculum Credit Matching and Reintegration System for Universities using NLP and Semantic Analysis
-            </h1>
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
-                <div>
-                    <p class="text-2xl text-blue-800 font-semibold">Rishi Mailoorkar</p>
-                    <p class="text-slate-500 font-medium">Research & Idea Submission</p>
-                </div>
-                <div class="text-right text-slate-400 mt-4 md:mt-0">
-                    <p>March 2026</p>
-                    <p>Academic Reintegration Systems</p>
-                </div>
-            </div>
-        </header>
+app, rt = fast_app(hdrs=hdrs)
 
-        <section>
-            <h2>Abstract</h2>
-            <div class="abstract">
-                Universities face significant administrative challenges when students take gap years or breaks in their studies. Curricular structures evolve annually—course codes change, subjects are modified, and new content is introduced—making the manual re-enrollment and credit validation process costly, slow, and error-prone. This paper proposes a Dynamic AI-ML System leveraging Natural Language Processing (NLP) and Semantic Analysis to automate credit matching, prevent redundant learning, and support seamless academic reintegration. The system intelligently aligns student transcripts with current curricula, identifies equivalencies, and predicts optimal academic paths.
-            </div>
-        </section>
+# 2. Reusable Components
+def MetricCard(value, label):
+    return Div(
+        Div(value, cls="text-3xl font-bold text-blue-600"),
+        Div(label, cls="text-sm text-slate-500 uppercase tracking-wider"),
+        cls="bg-white border border-slate-300 p-4 rounded-lg text-center shadow-sm"
+    )
 
-        <section>
-            <h2>1. Introduction</h2>
-            <p>Academic institutions must process variations in curricula, especially when students interrupt their studies. Traditional manual procedures for matching old credits to new course structures are inefficient, inconsistent, and often lead to student frustration. With advances in artificial intelligence, particularly in natural language understanding, there is an opportunity to automate and optimize this process.</p>
-            <p class="mt-4 font-semibold text-slate-700">This research explores an architectural framework for a system that:</p>
-            <ul class="list-disc ml-8 mt-2 space-y-1">
-                <li>Analyzes historic course descriptions and syllabi.</li>
-                <li>Maps old credits to new academic structures using semantic similarity.</li>
-                <li>Predicts equivalencies to prevent redundant coursework.</li>
-                <li>Provides actionable insights for administrators and students.</li>
-            </ul>
-        </section>
+def ProblemCard(title, text):
+    return Div(
+        Strong(f"{title}: "), Span(text),
+        cls="bg-red-50 p-4 border-l-4 border-red-400 rounded-r shadow-sm"
+    )
 
-        <section>
-            <h2>2. Problem Statement</h2>
-            <p>When a student returns after a drop year, several roadblocks emerge:</p>
-            <div class="grid md:grid-cols-2 gap-4 mt-4">
-                <div class="bg-red-50 p-4 border-l-4 border-red-400 rounded-r">
-                    <strong>Curricular Evolution:</strong> Courses are frequently updated, renamed, or replaced, breaking direct 1-to-1 code matches.
-                </div>
-                <div class="bg-red-50 p-4 border-l-4 border-red-400 rounded-r">
-                    <strong>Administrative Friction:</strong> Manual mapping is time-consuming and leads to inconsistent results across different departments.
-                </div>
-                <div class="bg-red-50 p-4 border-l-4 border-red-400 rounded-r">
-                    <strong>Redundant Learning:</strong> Students may be forced to re-take content they have already mastered.
-                </div>
-                <div class="bg-red-50 p-4 border-l-4 border-red-400 rounded-r">
-                    <strong>Lack of Automation:</strong> No current dynamic systems support automated validation for returning students.
-                </div>
-            </div>
-        </section>
+# 3. The Main Page Content
+@rt("/")
+def get():
+    return Body(cls="bg-slate-100 py-10 px-4")(
+        Div(cls="max-w-5xl mx-auto bg-white p-8 md:p-16 shadow-2xl rounded-xl")(
+            
+            # Header
+            Header(cls="pb-8 mb-10 border-b-4 border-blue-800")(
+                H1("Automated Curriculum Credit Matching and Reintegration System for Universities using NLP and Semantic Analysis", 
+                   cls="text-4xl md:text-5xl font-black text-slate-900 leading-tight mb-4"),
+                Div(cls="flex flex-col md:flex-row justify-between items-start md:items-center")(
+                    Div(
+                        P("Rishi Mailoorkar", cls="text-2xl text-blue-800 font-semibold"),
+                        P("Research & Idea Submission", cls="text-slate-500 font-medium")
+                    ),
+                    Div(cls="text-right text-slate-400 mt-4 md:mt-0")(
+                        P("March 2026"),
+                        P("Academic Reintegration Systems")
+                    )
+                )
+            ),
 
-        <section>
-            <h2>3. Related Work</h2>
-            <h3>3.1 Natural Language Processing in Education</h3>
-            <p>NLP techniques like vector embeddings and topic modeling have been used for resource classification and personalized learning, but rarely for administrative credit mapping.</p>
-            <h3>3.2 Semantic Matching and Embeddings</h3>
-            <p>Embedding models (e.g., BERT, Word2Vec) allow for semantic comparison between textual descriptions, moving beyond simple keyword matching.</p>
-            <h3>3.3 AI for Credit Transfer</h3>
-            <p>Current systems are largely rule-based. They lack the flexibility to handle "near-matches" in evolving syllabi that AI can identify.</p>
-        </section>
+            # Sections
+            Section(
+                H2("Abstract"),
+                Div(cls="abstract")(
+                    "Universities face significant administrative challenges when students take gap years or breaks in their studies. Curricular structures evolve annually—course codes change, subjects are modified, and new content is introduced—making the manual re-enrollment and credit validation process costly, slow, and error-prone. This paper proposes a Dynamic AI-ML System leveraging Natural Language Processing (NLP) and Semantic Analysis to automate credit matching, prevent redundant learning, and support seamless academic reintegration."
+                )
+            ),
 
-        <section>
-            <h2>4. System Architecture</h2>
-            <div class="diagram-container">
-                <div class="mermaid">
-                    graph LR
+            Section(
+                H2("1. Introduction"),
+                P("Academic institutions must process variations in curricula, especially when students interrupt their studies. Traditional manual procedures for matching old credits to new course structures are inefficient, inconsistent, and often lead to student frustration."),
+                P("This research explores an architectural framework for a system that:", cls="mt-4 font-semibold text-slate-700"),
+                Ul(cls="list-disc ml-8 mt-2 space-y-1")(
+                    Li("Analyzes historic course descriptions and syllabi."),
+                    Li("Maps old credits to new academic structures using semantic similarity."),
+                    Li("Predicts equivalencies to prevent redundant coursework."),
+                    Li("Provides actionable insights for administrators and students.")
+                )
+            ),
+
+            Section(
+                H2("2. Problem Statement"),
+                Div(cls="grid md:grid-cols-2 gap-4 mt-4")(
+                    ProblemCard("Curricular Evolution", "Courses are frequently updated, renamed, or replaced."),
+                    ProblemCard("Administrative Friction", "Manual mapping is time-consuming and leads to inconsistent results."),
+                    ProblemCard("Redundant Learning", "Students may be forced to re-take content already mastered."),
+                    ProblemCard("Lack of Automation", "No current dynamic systems support automated validation.")
+                )
+            ),
+
+            Section(
+                H2("4. System Architecture"),
+                Div(cls="diagram-container")(
+                    Div(cls="mermaid")(
+                        """graph LR
                         subgraph Data_Layer [Data Ingestion]
                             A1[Historic Catalogs]
                             A2[Student Transcripts]
                             A3[Current Curricula]
                         end
-                        
                         subgraph Processing_Engine [Core AI Engine]
                             B1[Text Preprocessing]
                             B2[Semantic Embedding Engine]
                             B3[Matching Module]
                         end
-
                         subgraph Output_Layer [Applications]
                             C1[Admin Dashboard]
                             C2[Recommendation Reports]
-                            C3[Student Path Prediction]
                         end
-
                         Data_Layer --> B1
                         B1 --> B2
                         B2 --> B3
-                        B3 --> Output_Layer
-                </div>
-                <p class="text-sm text-center text-slate-500 mt-4 italic">Figure 1: High-level architectural components of the proposed system.</p>
-            </div>
-        </section>
+                        B3 --> Output_Layer"""
+                    ),
+                    P("Figure 1: Architectural components", cls="text-sm text-center text-slate-500 mt-4 italic")
+                )
+            ),
 
-        <section>
-            <h2>5. Methodology</h2>
-            <h3>5.1 Data Collection & 5.2 Preprocessing</h3>
-            <p>We standardize academic text via tokenization, lowercasing, and removal of stop words. Learning outcomes and credit weights are tagged as metadata.</p>
-            
-            <h3>5.3 Embedding and Semantic Representation</h3>
-            <p>We generate numeric vectors ($E_i$) for course descriptions using SBERT:</p>
-            <div class="equation-box">
-                $$E_i = \text{EmbeddingModel}(T_i)$$
-                <p class="text-sm text-slate-500 mt-2">Cosine Similarity Calculation:</p>
-                $$\text{similarity}(E_i, E_j) = \frac{E_i \cdot E_j}{\|E_i\| \|E_j\|}$$
-            </div>
+            Section(
+                H2("5. Methodology"),
+                H3("5.3 Embedding and Semantic Representation"),
+                Div(cls="equation-box")(
+                    P("$$E_i = \\text{EmbeddingModel}(T_i)$$"),
+                    P("$$\\text{similarity}(E_i, E_j) = \\frac{E_i \\cdot E_j}{\\|E_i\\| \\|E_j\\|}$$", cls="mt-4")
+                )
+            ),
 
-            <h3>5.4 Matching Algorithm & 5.5 Decision Layer</h3>
-            <div class="diagram-container">
-                <div class="mermaid">
-                    flowchart TD
-                        Start[New Transcript Upload] --> Vec[Generate Embeddings]
-                        Vec --> Search[Vector Search vs Current Catalog]
-                        Search --> Score{Is Similarity > 0.82?}
-                        Score -- Yes --> Auto[Suggest Auto-Equivalency]
-                        Score -- No --> Manual[Flag for Admin Review]
-                        Auto --> Final[Generate Credit Report]
-                        Manual --> Final
-                </div>
-            </div>
-        </section>
+            Section(
+                H2("8. Experimental Evaluation"),
+                Div(cls="grid md:grid-cols-3 gap-6 my-6")(
+                    MetricCard("87%", "Accuracy"),
+                    MetricCard("60%", "Time Saved"),
+                    MetricCard("High", "Satisfaction")
+                ),
+                P(Strong("9. Results:"), " The prototype demonstrated that semantic richness is vital. AI handles 80% of cases while edge cases benefit from oversight.")
+            ),
 
-        <section>
-            <h2>6. Dynamic Model Adaptation</h2>
-            <p>The system utilizes an <strong>Online Learning Pipeline</strong>. When an administrator corrects a match, that feedback is fed back into the model to refine future similarity thresholds.</p>
+            Section(
+                H2("10. Conclusion"),
+                P("This research confirms that NLP can effectively bridge the gap between historic and modern university curricula, ensuring a fair, fast reintegration path.")
+            ),
 
-            <h2>7. Admin Panel Requirements</h2>
-            <ul class="list-check ml-8 space-y-2 text-slate-700">
-                <li><strong>Upload Interface:</strong> Support for CSV/PDF catalogs.</li>
-                <li><strong>Visualization:</strong> Side-by-side comparison of old vs. new syllabus.</li>
-                <li><strong>Audit Trail:</strong> Record of who approved which match for accreditation.</li>
-            </ul>
-        </section>
+            Footer(cls="mt-16 pt-8 border-t border-slate-200 text-center")(
+                P("© 2026 Rishi Mailoorkar. Original Idea & System Design.", cls="text-slate-500 text-sm"),
+                P("End of Submission", cls="text-slate-400 text-xs mt-2 uppercase tracking-widest")
+            )
+        )
+    )
 
-        <section>
-            <h2>8. Experimental Evaluation</h2>
-            <div class="grid md:grid-cols-3 gap-6 my-6">
-                <div class="metric-card">
-                    <div class="text-3xl font-bold text-blue-600">87%</div>
-                    <div class="text-sm text-slate-500 uppercase tracking-wider">Accuracy</div>
-                </div>
-                <div class="metric-card">
-                    <div class="text-3xl font-bold text-blue-600">60%</div>
-                    <div class="text-sm text-slate-500 uppercase tracking-wider">Time Saved</div>
-                </div>
-                <div class="metric-card">
-                    <div class="text-3xl font-bold text-blue-600">High</div>
-                    <div class="text-sm text-slate-500 uppercase tracking-wider">Student Satisfaction</div>
-                </div>
-            </div>
-            <p><strong>9. Results:</strong> The prototype demonstrated that semantic richness in course descriptions is vital. While the AI handles 80% of cases, "edge cases" (like specialized electives) still benefit from admin oversight.</p>
-        </section>
-
-        <section>
-            <h2>10. Conclusion</h2>
-            <p>This research confirms that NLP can effectively bridge the gap between historic and modern university curricula. By automating the credit matching process, universities can ensure a fair, fast, and transparent reintegration path for students.</p>
-
-            <h2>11. Future Work</h2>
-            <ul class="list-disc ml-8 mt-2">
-                <li><strong>Knowledge Graphs:</strong> Linking prerequisite concepts across different departments.</li>
-                <li><strong>Multilingual Support:</strong> Handling credit transfers for international exchange students.</li>
-                <li><strong>OER Integration:</strong> Suggesting open-source materials to bridge minor knowledge gaps found during matching.</li>
-            </ul>
-        </section>
-
-        <footer class="mt-16 pt-8 border-t border-slate-200 text-center">
-            <p class="text-slate-500 text-sm">© 2026 Rishi Mailoorkar. Original Idea & System Design.</p>
-            <p class="text-slate-400 text-xs mt-2 uppercase tracking-widest">End of Submission</p>
-        </footer>
-    </div>
-
-</body>
-</html>
+serve()
